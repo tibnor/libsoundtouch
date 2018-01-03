@@ -138,6 +138,9 @@ class SoundTouchDevice:
 
     def start_notification(self):
         """Start Websocket connection."""
+        if self._ws_client is not None:
+            self.stop_notification()
+
         self._ws_client = websocket.WebSocketApp(
             "ws://{0}:{1}/".format(self._host, self._ws_port),
             on_message=self._on_message,
@@ -148,6 +151,7 @@ class SoundTouchDevice:
     def stop_notification(self):
         """Stop Websocket connection."""
         self._ws_client.close()
+        self._ws_client = None
 
     def add_volume_listener(self, listener):
         """Add a new volume updated listener."""
@@ -242,7 +246,7 @@ class SoundTouchDevice:
     def refresh_status(self):
         """Refresh status state."""
         response = requests.get(
-            "http://" + self._host + ":" + str(self._port) + "/now_playing")
+            "http://" + self._host + ":" + str(self._port) + "/now_playing",timeout=10)
         response.encoding = 'UTF-8'
         dom = minidom.parseString(response.text.encode('utf-8'))
         self._status = Status(dom)
