@@ -8,6 +8,7 @@ from threading import Thread
 from xml.dom import minidom
 import os
 import re
+import datetime
 
 import requests
 import websocket
@@ -64,7 +65,7 @@ class WebSocketThread(Thread):
 
     def run(self):
         """Start Websocket thread."""
-        self._ws.run_forever()
+        self._ws.run_forever(ping_interval=60*5)
 
 
 class SoundTouchDevice:
@@ -105,6 +106,9 @@ class SoundTouchDevice:
                 self.__run_listener(self._device_info_updated_listeners,
                                     self._config)
 
+
+
+
     def __init__(self, host, port=8090, ws_port=8080, dlna_port=8091):
         """Create a new Soundtouch device.
 
@@ -128,6 +132,7 @@ class SoundTouchDevice:
         self._presets_updated_listeners = []
         self._zone_status_updated_listeners = []
         self._device_info_updated_listeners = []
+        self._pong_time = None
 
     def __init_config(self):
         response = requests.get(
@@ -144,14 +149,30 @@ class SoundTouchDevice:
         self._ws_client = websocket.WebSocketApp(
             "ws://{0}:{1}/".format(self._host, self._ws_port),
             on_message=self._on_message,
+            on_pong=self._on_pong,
             subprotocols=['gabbo'])
         ws_thread = WebSocketThread(self._ws_client)
         ws_thread.start()
+        self._pong_time = datetime.datetime.now()
+
 
     def stop_notification(self):
         """Stop Websocket connection."""
         self._ws_client.close()
         self._ws_client = None
+
+    def _on_pong(self,web_socket, message):
+        self._pong_time = datetime.datetime.now()
+
+    def is_pong_on_time(self):
+        if self._pong_time is None:
+            return True
+        now = datetime.datetime.now()
+        dt = now - self._pong_time
+        if (dt > datetime.timedelta(seconds=60*5+10)):
+            return False
+        else:
+            return True
 
     def add_volume_listener(self, listener):
         """Add a new volume updated listener."""
