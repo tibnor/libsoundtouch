@@ -41,9 +41,11 @@ def discover_devices(timeout=5):
     zeroconf = Zeroconf()
     listener = SoundtouchDeviceListener(add_device_function)
     _LOGGER.debug("Starting discovery...")
-    ServiceBrowser(zeroconf, "_soundtouch._tcp.local.", listener)
+    browser = ServiceBrowser(zeroconf, "_soundtouch._tcp.local.", listener)
     try:
         add_devices_queue.get(timeout=timeout)
     except Empty:
         _LOGGER.debug("End of discovery...")
+    browser.cancel()
+    zeroconf.close()
     return devices
