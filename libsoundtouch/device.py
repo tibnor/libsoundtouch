@@ -158,8 +158,9 @@ class SoundTouchDevice:
 
     def stop_notification(self):
         """Stop Websocket connection."""
-        self._ws_client.close()
-        self._ws_client = None
+        if self._ws_client is not None:
+            self._ws_client.close()
+            self._ws_client = None
 
     def _on_pong(self,web_socket, message):
         self._pong_time = datetime.datetime.now()
