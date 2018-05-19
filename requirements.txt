@@ -2,3 +2,5 @@ requests
 websocket-client
 enum-compat
 zeroconf
+urllib3
+mypy

@@ -65,7 +65,7 @@ class WebSocketThread(Thread):
 
     def run(self):
         """Start Websocket thread."""
-        self._ws.run_forever(ping_interval=60*5)
+        self._ws.run_forever(ping_interval=60 * 5)
 
 
 class SoundTouchDevice:
@@ -105,9 +105,6 @@ class SoundTouchDevice:
                 self.__init_config()
                 self.__run_listener(self._device_info_updated_listeners,
                                     self._config)
-
-
-
 
     def __init__(self, host, port=8090, ws_port=8080, dlna_port=8091):
         """Create a new Soundtouch device.
@@ -155,14 +152,13 @@ class SoundTouchDevice:
         ws_thread.start()
         self._pong_time = datetime.datetime.now()
 
-
     def stop_notification(self):
         """Stop Websocket connection."""
         if self._ws_client is not None:
             self._ws_client.close()
             self._ws_client = None
 
-    def _on_pong(self,web_socket, message):
+    def _on_pong(self, web_socket, message):
         self._pong_time = datetime.datetime.now()
 
     def is_pong_on_time(self):
@@ -170,7 +166,7 @@ class SoundTouchDevice:
             return True
         now = datetime.datetime.now()
         dt = now - self._pong_time
-        if (dt > datetime.timedelta(seconds=60*5+10)):
+        if (dt > datetime.timedelta(seconds=60 * 5 + 10)):
             return False
         else:
             return True
@@ -268,7 +264,7 @@ class SoundTouchDevice:
     def refresh_status(self):
         """Refresh status state."""
         response = requests.get(
-            "http://" + self._host + ":" + str(self._port) + "/now_playing",timeout=10)
+            "http://" + self._host + ":" + str(self._port) + "/now_playing", timeout=10)
         response.encoding = 'UTF-8'
         dom = minidom.parseString(response.text.encode('utf-8'))
         self._status = Status(dom)
@@ -477,7 +473,7 @@ class SoundTouchDevice:
             self.refresh_status()
         return self._status
 
-    def volume(self, refresh=True):
+    def volume(self, refresh=True) -> 'Volume':
         """Get volume object.
 
         :param refresh: Force refresh, else return old data.
@@ -504,12 +500,12 @@ class SoundTouchDevice:
             self.refresh_presets()
         return self._presets
 
-    def set_volume(self, level):
+    def set_volume(self, level: float):
         """Set volume level: from 0 to 100."""
         action = '/volume'
-        volume = '<volume>%s</volume>' % level
-        requests.post('http://' + self._host + ":" + str(self._port) + action,
-                      volume)
+        volume = '<volume>%.0f</volume>' % level
+        url = 'http://' + self._host + ":" + str(self._port) + action
+        requests.post(url, volume)
 
     def mute(self):
         """Mute/Un-mute volume."""
